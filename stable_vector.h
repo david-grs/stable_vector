@@ -4,6 +4,7 @@
 #include <array>
 #include <memory>
 #include <iterator>
+#include <algorithm>
 
 #include <boost/operators.hpp>
 #include <boost/container/static_vector.hpp>
@@ -72,7 +73,7 @@ public:
 	};
 
 	iterator begin() { return {this, 0}; }
-	iterator end()   { return {this, size() - 1}; }
+	iterator end()   { return {this, size()}; }
 
 	const_iterator cbegin() const { return const_cast<container&>(*this).begin(); }
 	const_iterator cend()   const { return const_cast<container&>(*this).end(); }
@@ -87,7 +88,7 @@ public:
 	size_type max_size() const { return std::numeric_limits<size_type>::max(); }
 	bool      empty()    const { return m_chunks.empty(); }
 
-	bool operator==(const container& c) const { return std::equal(cbegin(), cend(), c.cbegin(), c.cend()); }
+	bool operator==(const container& c) const { return size() == c.size() && std::equal(cbegin(), cend(), c.cbegin()); }
 	bool operator!=(const container& c) const { return !operator==(c); }
 
 	void swap(container& c) { std::swap(m_chunks, c.m_chunks); }
@@ -129,7 +130,7 @@ public:
 	void emplace_back(_Args&&... args)
 	{
 		chunk_type& chunk = current_chunk();
-		::new((void *)&(chunk[chunk.size()])) _T(std::forward<_Args>(args)...);
+		chunk.emplace_back(std::forward<_Args>(args)...);
 	}
 
 	reference operator[](size_type i)
