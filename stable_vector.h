@@ -90,11 +90,7 @@ public:
 	bool operator==(const container& c) const { return std::equal(cbegin(), cend(), c.cbegin(), c.cend()); }
 	bool operator!=(const container& c) const { return !operator==(c); }
 
-	void swap(container& c)
-	{
-		std::swap(m_chunks, c.m_chunks);
-		std::swap(m_size, c.m_size);
-	}
+	void swap(container& c) { std::swap(m_chunks, c.m_chunks); }
 
 	friend void swap(container& l, container& r)
 	{
@@ -141,7 +137,7 @@ public:
 
 	reference at(size_type i)
 	{
-		if (i >= m_size)
+		if (i >= size())
 			throw std::out_of_range("stable_vector::at");
 
 		size_type chunk_idx = i / _ElementsPerChunk;
@@ -153,6 +149,5 @@ public:
 
 private:
 	storage_type m_chunks;
-	size_type    m_size = 0;
 };
 
