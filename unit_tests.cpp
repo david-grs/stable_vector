@@ -122,3 +122,42 @@ TEST(stable_vector, end)
 	ASSERT_EQ(*(v.end() - 1), 2);
 	ASSERT_EQ(*(v.cend() - 1), 2);
 }
+
+TEST(stable_vector_iterator, empty)
+{
+	stable_vector<int, 10> v;
+	ASSERT_TRUE(v.begin() == v.end());
+	ASSERT_TRUE(v.begin() == v.cend());
+	ASSERT_TRUE(v.cbegin() == v.end());
+	ASSERT_TRUE(v.cbegin() == v.cend());
+}
+
+TEST(stable_vector_iterator, for_loop)
+{
+	stable_vector<int, 10> v = {0,1,2,3,4};
+	int i = 0;
+
+	for (auto it = v.cbegin(); it != v.cend(); ++it, ++i)
+		ASSERT_EQ(*it, i);
+}
+
+TEST(stable_vector_iterator, arithmetic)
+{
+	stable_vector<int, 10> v = {0,1,2,3,4};
+	auto it = v.cbegin() + 3;
+	ASSERT_EQ(*it, 3);
+
+	it = it - 1;
+	ASSERT_EQ(*it, 2);
+
+	--it;
+	ASSERT_EQ(*it, 1);
+
+	it += 4;
+	ASSERT_TRUE(it == v.cend());
+	ASSERT_TRUE(it == v.end());
+
+	it -= 5;
+	ASSERT_TRUE(it == v.cbegin());
+	ASSERT_TRUE(it == v.begin());
+}

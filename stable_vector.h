@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <array>
+#include <initializer_list>
 #include <memory>
 #include <iterator>
 #include <algorithm>
@@ -46,7 +46,7 @@ private:
 		bool operator==(iterator_base it) const { return m_container == it.m_container && m_index == it.m_index; }
 
 	protected:
-		container* m_container = nullptr;
+		container* m_container;
 		size_type  m_index;
 	};
 
@@ -70,7 +70,24 @@ public:
 		const_iterator(const iterator& it) :
 			iterator_base<const_iterator>(it.m_container, it.m_index)
 		{}
+
+		friend bool operator==(const iterator& l, const const_iterator& r)
+		{
+			return l.m_container == r.m_container && l.m_index == r.m_index;
+		}
+
+		friend bool operator==(const const_iterator& l, const iterator& r)
+		{
+			return r == l;
+		}
 	};
+
+	stable_vector() =default;
+	stable_vector(std::initializer_list<_T> init)
+	{
+		for (const auto& t : init)
+			push_back(t);
+	}
 
 	iterator begin() { return {this, 0}; }
 	iterator end()   { return {this, size()}; }
