@@ -1,5 +1,7 @@
 #include "stable_vector.h"
 
+#include <list>
+
 #include <boost/noncopyable.hpp>
 #include <gtest/gtest.h>
 
@@ -17,6 +19,39 @@ TEST(stable_vector, init)
 	stable_vector<int> v;
 	ASSERT_TRUE(v.empty());
 	ASSERT_EQ(v.size(), 0);
+}
+
+TEST(stable_vector, ctor_initializer_list)
+{
+	stable_vector<int, 10> v = {0,1,2,3,4};
+	ASSERT_EQ(v.size(), 5);
+	ASSERT_EQ(std::accumulate(v.cbegin(), v.cend(), 0), 0+1+2+3+4);
+}
+
+TEST(stable_vector, ctor_element_copies)
+{
+	stable_vector<int, 10> v(5, 1);
+	ASSERT_EQ(v.size(), 5);
+	ASSERT_EQ(v[0], 1);
+	ASSERT_EQ(std::accumulate(v.cbegin(), v.cend(), 0), 5);
+}
+
+TEST(stable_vector, ctor_count)
+{
+	stable_vector<int, 10> v(5);
+	ASSERT_EQ(v.size(), 5);
+	ASSERT_EQ(v[0], 0);
+	ASSERT_EQ(std::accumulate(v.cbegin(), v.cend(), 0), 0);
+}
+
+TEST(stable_vector, ctor_input_iterator)
+{
+	std::list<int> l = {1,2,3,4,5};
+	stable_vector<int, 10> v(l.begin(), l.end());
+
+	ASSERT_EQ(v.size(), l.size());
+	ASSERT_EQ(std::accumulate(v.cbegin(), v.cend(), 0),
+			  std::accumulate(l.cbegin(), l.cend(), 0));
 }
 
 TEST(stable_vector, push_back)
@@ -139,6 +174,10 @@ TEST(stable_vector_iterator, for_loop)
 
 	for (auto it = v.cbegin(); it != v.cend(); ++it, ++i)
 		ASSERT_EQ(*it, i);
+
+	i = 0;
+	for (auto t : v)
+		ASSERT_EQ(t, i++);
 }
 
 TEST(stable_vector_iterator, arithmetic)
@@ -160,4 +199,10 @@ TEST(stable_vector_iterator, arithmetic)
 	it -= 5;
 	ASSERT_TRUE(it == v.cbegin());
 	ASSERT_TRUE(it == v.begin());
+}
+
+TEST(stable_vector_iterator, distance)
+{
+	stable_vector<int, 10> v = {0,1,2,3,4};
+	ASSERT_TRUE(std::distance(v.cbegin(), v.cend()) == v.cend() - v.cbegin());
 }
