@@ -112,6 +112,23 @@ public:
 			push_back(*first);
 	}
 
+	stable_vector(const stable_vector& v)
+	{
+		for (const std::unique_ptr<chunk_type>& pchunk : v.m_chunks)
+			m_chunks.emplace_back(new chunk_type(*pchunk));
+	}
+
+	stable_vector(stable_vector&& v) :
+		m_chunks(std::move(v.m_chunks))
+	{
+	}
+
+	stable_vector& operator=(stable_vector v)
+	{
+		swap(v);
+		return *this;
+	}
+
 	iterator begin() { return {this, 0}; }
 	iterator end()   { return {this, size()}; }
 
@@ -131,7 +148,7 @@ public:
 	bool operator==(const container& c) const { return size() == c.size() && std::equal(cbegin(), cend(), c.cbegin()); }
 	bool operator!=(const container& c) const { return !operator==(c); }
 
-	void swap(container& c) { std::swap(m_chunks, c.m_chunks); }
+	void swap(container& v) { std::swap(m_chunks, v.m_chunks); }
 
 	friend void swap(container& l, container& r)
 	{

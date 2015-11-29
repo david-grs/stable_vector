@@ -54,6 +54,52 @@ TEST(stable_vector, ctor_input_iterator)
 			  std::accumulate(l.cbegin(), l.cend(), 0));
 }
 
+TEST(stable_vector, copy_ctor)
+{
+	stable_vector<int, 10> v1 = {1,2,3,4,5};
+	stable_vector<int, 10> v2(v1);
+
+	ASSERT_TRUE(v1 == v2);
+
+	v2.push_back(6);
+	ASSERT_EQ(v1.size(), 5);
+	ASSERT_EQ(v2.size(), 6);
+}
+
+TEST(stable_vector, copy_assignment)
+{
+	stable_vector<int, 10> v1 = {1,2,3,4,5};
+	stable_vector<int, 10> v2 = {10,11};
+
+	ASSERT_TRUE(v1 != v2);
+
+	v2 = v1;
+
+	ASSERT_TRUE(v1 == v2);
+
+	v2.push_back(6);
+	ASSERT_EQ(v1.size(), 5);
+	ASSERT_EQ(v2.size(), 6);
+}
+
+TEST(stable_vector, move_ctor)
+{
+	stable_vector<int, 10> vtmp = {1,2,3,4,5};
+	stable_vector<int, 10> v2(std::move(vtmp));
+
+	ASSERT_EQ(v2.size(), 5);
+	ASSERT_TRUE(vtmp.empty());
+}
+
+TEST(stable_vector, move_assignment)
+{
+	stable_vector<int, 10> v2 = {10, 11};
+
+	v2 = stable_vector<int, 10>({1,2,3,4,5});
+
+	ASSERT_EQ(v2.size(), 5);
+}
+
 TEST(stable_vector, push_back)
 {
 	stable_vector<A> v;
@@ -199,10 +245,4 @@ TEST(stable_vector_iterator, arithmetic)
 	it -= 5;
 	ASSERT_TRUE(it == v.cbegin());
 	ASSERT_TRUE(it == v.begin());
-}
-
-TEST(stable_vector_iterator, distance)
-{
-	stable_vector<int, 10> v = {0,1,2,3,4};
-	ASSERT_TRUE(std::distance(v.cbegin(), v.cend()) == v.cend() - v.cbegin());
 }
