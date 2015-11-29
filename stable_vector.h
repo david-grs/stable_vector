@@ -107,12 +107,18 @@ private:
 	chunk_type& current_chunk()
 	{
 		if (m_chunks.empty() || m_chunks.back()->size() == _ElementsPerChunk)
-			m_chunks.emplace_back();
+			m_chunks.emplace_back(new chunk_type());
 
 		return *m_chunks.back();
 	}
 
 public:
+	void push_back(const _T& t)
+	{
+		chunk_type& chunk = current_chunk();
+		chunk.push_back(t);
+	}
+
 	void push_back(_T&& t)
 	{
 		chunk_type& chunk = current_chunk();
@@ -129,7 +135,7 @@ public:
 	reference operator[](size_type i)
 	{
 		size_type chunk_idx = i / _ElementsPerChunk;
-		chunk_type& chunk = m_chunks[chunk_idx];
+		chunk_type& chunk = *m_chunks[chunk_idx];
 		return chunk[i - chunk_idx * _ElementsPerChunk];
 	}
 
@@ -140,9 +146,7 @@ public:
 		if (i >= size())
 			throw std::out_of_range("stable_vector::at");
 
-		size_type chunk_idx = i / _ElementsPerChunk;
-		chunk_type& chunk = m_chunks[chunk_idx];
-		return chunk[i - chunk_idx * _ElementsPerChunk];
+		return operator[](i);
 	}
 
 	const_reference at(size_type i) const { return at(i); }
