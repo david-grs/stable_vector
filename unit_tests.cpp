@@ -204,6 +204,52 @@ TEST(stable_vector, end)
 	ASSERT_EQ(*(v.cend() - 1), 2);
 }
 
+TEST(stable_vector_multiple_chunks, init)
+{
+	stable_vector<int, 3> v = {1,2,3,4,5,6,7,8,9};
+	ASSERT_EQ(v.size(), 9);
+}
+
+TEST(stable_vector_multiple_chunks, copy)
+{
+	stable_vector<int, 3> v = {1,2,3,4,5,6,7,8,9};
+	ASSERT_EQ(v.size(), 9);
+
+	stable_vector<int, 3> v2 = {1};
+	ASSERT_EQ(v2.size(), 1);
+
+	v2 = v;
+	ASSERT_EQ(v2.size(), 9);
+
+	v = {};
+	ASSERT_TRUE(v.empty());
+	ASSERT_EQ(v2.size(), 9);
+	ASSERT_EQ(v2[8], 9);
+}
+
+TEST(stable_vector_multiple_chunks, reference)
+{
+	stable_vector<int, 2> v = {1, 2};
+	auto* ref = &v[1];
+
+	for (int i = 3; i < 10; ++i)
+		v.push_back(i);
+
+	ASSERT_TRUE(ref == &v[1]);
+}
+
+TEST(stable_vector_multiple_chunks, iterator)
+{
+	stable_vector<int, 2> v = {1, 2, 3};
+	auto it = v.begin() + 1;
+
+	for (int i = 4; i < 10; ++i)
+		v.push_back(i);
+
+	ASSERT_TRUE(*it == 2);
+	ASSERT_TRUE(it == v.begin() + 1);
+}
+
 TEST(stable_vector_iterator, empty)
 {
 	stable_vector<int, 10> v;
