@@ -13,11 +13,15 @@
 template <typename _T, std::size_t _ChunkSize = 512>
 struct stable_vector
 {
-    typedef _T value_type;
-    typedef _T& reference;
-    typedef const _T& const_reference;
-    typedef std::size_t size_type;
-    typedef size_type difference_type;
+    using value_type = _T;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using size_type = std::size_t;
+    using difference_type = size_type;
+
+    constexpr size_type chunk_size() const noexcept { return _ChunkSize; }
 
 private:
     using chunk_type = boost::container::static_vector<_T, _ChunkSize>;
