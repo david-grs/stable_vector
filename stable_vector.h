@@ -32,54 +32,26 @@ private:
     template <typename _Iter>
     struct iterator_base
     {
-        iterator_base(container* c = nullptr, size_type i = 0) : m_container(c), m_index(i)
-        {
-        }
+        iterator_base(container* c = nullptr, size_type i = 0) :
+            m_container(c),
+            m_index(i)
+        {}
+        virtual ~iterator_base() {}
 
-        reference operator*()
-        {
-            return (*m_container)[m_index];
-        }
-        iterator_base operator+(size_type i)
-        {
-            return {m_container, m_index + i};
-        }
+        reference operator*() { return (*m_container)[m_index]; }
 
-        iterator_base& operator+=(size_type i)
-        {
-            m_index += i;
-            return *this;
-        }
-        iterator_base& operator++()
-        {
-            ++m_index;
-            return *this;
-        }
+        iterator_base operator+(size_type i) { return {m_container, m_index + i}; }
+        iterator_base operator-(size_type i) { return {m_container, m_index - i}; }
 
-        iterator_base& operator-=(size_type i)
-        {
-            m_index -= i;
-            return *this;
-        }
-        iterator_base& operator--()
-        {
-            --m_index;
-            return *this;
-        }
+        iterator_base& operator+=(size_type i) { m_index += i; return *this; }
+        iterator_base& operator-=(size_type i) { return operator+=(-i); }
+        iterator_base& operator++()            { return operator+=(1); }
+        iterator_base& operator--()            { return operator+=(-1); }
 
-        difference_type operator-(iterator_base it)
-        {
-            return m_index - it.m_index;
-        }
+        difference_type operator-(iterator_base it) { assert(m_container == it.m_container); return m_index - it.m_index; }
 
-        bool operator<(iterator_base it) const
-        {
-            return m_index < it.m_index;
-        }
-        bool operator==(iterator_base it) const
-        {
-            return m_container == it.m_container && m_index == it.m_index;
-        }
+        bool operator< (iterator_base it) const { assert(m_container == it.m_container); return m_index < it.m_index; }
+        bool operator==(iterator_base it) const { return m_container == it.m_container && m_index == it.m_index; }
 
        protected:
         container* m_container;
