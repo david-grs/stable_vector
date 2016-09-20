@@ -48,10 +48,10 @@ private:
         iterator_base& operator++()            { return operator+=(1); }
         iterator_base& operator--()            { return operator+=(-1); }
 
-        difference_type operator-(iterator_base it) { assert(m_container == it.m_container); return m_index - it.m_index; }
+        difference_type operator-(const iterator_base& it) { assert(m_container == it.m_container); return m_index - it.m_index; }
 
-        bool operator< (iterator_base it) const { assert(m_container == it.m_container); return m_index < it.m_index; }
-        bool operator==(iterator_base it) const { return m_container == it.m_container && m_index == it.m_index; }
+        bool operator< (const iterator_base& it) const { assert(m_container == it.m_container); return m_index < it.m_index; }
+        bool operator==(const iterator_base& it) const { return m_container == it.m_container && m_index == it.m_index; }
 
      protected:
         container* m_container;
@@ -61,30 +61,28 @@ private:
 public:
     struct const_iterator;
 
-    struct iterator : public iterator_base<iterator>, public boost::random_access_iterator_helper<iterator, value_type>
+    struct iterator :
+        public iterator_base<iterator>,
+        public boost::random_access_iterator_helper<iterator, value_type>
     {
         using iterator_base<iterator>::iterator_base;
         friend struct const_iterator;
     };
 
-    struct const_iterator : public iterator_base<const_iterator>,
-                            public boost::random_access_iterator_helper<const_iterator, const value_type>
+    struct const_iterator :
+        public iterator_base<const_iterator>,
+        public boost::random_access_iterator_helper<const_iterator, const value_type>
     {
         using iterator_base<const_iterator>::iterator_base;
 
-        const_iterator(const iterator& it) : iterator_base<const_iterator>(it.m_container, it.m_index)
+        const_iterator(const iterator& it) :
+            iterator_base<const_iterator>(it.m_container, it.m_index)
         {
         }
 
-        friend bool operator==(const iterator& l, const const_iterator& r)
-        {
-            return l.m_container == r.m_container && l.m_index == r.m_index;
-        }
+        bool operator==(const const_iterator& it) const { return iterator_base<const_iterator>::operator==(it); }
 
-        friend bool operator==(const const_iterator& l, const iterator& r)
-        {
-            return r == l;
-        }
+        friend bool operator==(const iterator& l, const const_iterator& r) { return r == l; }
     };
 
     stable_vector() = default;
