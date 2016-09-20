@@ -28,6 +28,7 @@ struct stable_vector
     using difference_type = size_type;
 
     constexpr size_type chunk_size() const noexcept { return _ChunkSize; }
+    constexpr size_type max_size() const noexcept   { return std::numeric_limits<size_type>::max(); }
 
 private:
     using chunk_type = boost::container::static_vector<_T, _ChunkSize>;
@@ -106,7 +107,7 @@ public:
 
     stable_vector(const std::initializer_list<_T>& init)
     {
-        for (const auto& t : init)
+        for (auto&& t : init)
             push_back(t);
     }
 
@@ -124,11 +125,12 @@ public:
 
     stable_vector(const stable_vector& v)
     {
-        for (const std::unique_ptr<chunk_type>& pchunk : v.m_chunks)
-            m_chunks.emplace_back(make_unique<chunk_type>(*pchunk));
+        for (auto&& chunk : v.m_chunks)
+            m_chunks.emplace_back(make_unique<chunk_type>(*chunk));
     }
 
-    stable_vector(stable_vector&& v) : m_chunks(std::move(v.m_chunks))
+    stable_vector(stable_vector&& v) :
+        m_chunks(std::move(v.m_chunks))
     {
     }
 
@@ -154,51 +156,26 @@ public:
                                    return s + chunk_ptr->size();
                                });
     }
-    size_type max_size() const
-    {
-        return std::numeric_limits<size_type>::max();
-    }
-    bool empty() const
-    {
-        return m_chunks.empty();
-    }
+
+    size_type capacity() const { return m_chunks.size() * _ChunkSize; }
+    bool empty() const { return m_chunks.empty(); }
 
     bool operator==(const container& c) const
     {
         return size() == c.size() && std::equal(cbegin(), cend(), c.cbegin());
     }
-    bool operator!=(const container& c) const
-    {
-        return !operator==(c);
-    }
 
-    void swap(container& v)
-    {
-        std::swap(m_chunks, v.m_chunks);
-    }
+    bool operator!=(const container& c) const { return !operator==(c); }
 
-    friend void swap(container& l, container& r)
-    {
-        l.swap(r);
-    }
+    void swap(container& v) { std::swap(m_chunks, v.m_chunks); }
 
-    reference front()
-    {
-        return m_chunks.front()->front();
-    }
-    const_reference front() const
-    {
-        return front();
-    }
+    friend void swap(container& l, container& r) { l.swap(r); }
 
-    reference back()
-    {
-        return m_chunks.back()->back();
-    }
-    const_reference back() const
-    {
-        return back();
-    }
+    reference front()             { return m_chunks.front()->front(); }
+    const_reference front() const { return front(); }
+
+    reference back()             { return m_chunks.back()->back(); }
+    const_reference back() const { return back(); }
 
 private:
     chunk_type& current_chunk()
