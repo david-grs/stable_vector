@@ -35,16 +35,14 @@ private:
 
     using container = stable_vector<_T, _ChunkSize>;
 
-    template <typename _Iter>
+    template <typename _Iter, typename _ContainerT>
     struct iterator_base
     {
-        iterator_base(container* c = nullptr, size_type i = 0) :
+        iterator_base(_ContainerT* c = nullptr, size_type i = 0) :
             m_container(c),
             m_index(i)
         {}
         virtual ~iterator_base() {}
-
-        reference operator*() { return (*m_container)[m_index]; }
 
         iterator_base& operator+=(size_type i) { m_index += i; return *this; }
         iterator_base& operator-=(size_type i) { return operator+=(-i); }
@@ -57,7 +55,7 @@ private:
         bool operator==(const iterator_base& it) const { return m_container == it.m_container && m_index == it.m_index; }
 
      protected:
-        container* m_container;
+        _ContainerT* m_container;
         size_type m_index;
     };
 
@@ -65,25 +63,30 @@ public:
     struct const_iterator;
 
     struct iterator :
-        public iterator_base<iterator>,
+        public iterator_base<iterator, container>,
         public boost::random_access_iterator_helper<iterator, value_type>
     {
-        using iterator_base<iterator>::iterator_base;
+        using iterator_base<iterator, container>::iterator_base;
         friend struct const_iterator;
+
+        reference operator*() { return (*this->m_container)[this->m_index]; }
     };
 
     struct const_iterator :
-        public iterator_base<const_iterator>,
+        public iterator_base<const_iterator, const container>,
         public boost::random_access_iterator_helper<const_iterator, const value_type>
     {
-        using iterator_base<const_iterator>::iterator_base;
+        using iterator_base<const_iterator, const container>::iterator_base;
 
         const_iterator(const iterator& it) :
-            iterator_base<const_iterator>(it.m_container, it.m_index)
+            iterator_base<const_iterator, const container>(it.m_container, it.m_index)
         {
         }
 
-        bool operator==(const const_iterator& it) const { return iterator_base<const_iterator>::operator==(it); }
+        const_reference operator*() const { return (*this->m_container)[this->m_index]; }
+
+        bool operator==(const const_iterator& it) const
+        { return iterator_base<const_iterator, const container>::operator==(it); }
 
         friend bool operator==(const iterator& l, const const_iterator& r) { return r == l; }
     };
@@ -135,23 +138,14 @@ public:
         return *this;
     }
 
-    iterator begin()
-    {
-        return {this, 0};
-    }
-    iterator end()
-    {
-        return {this, size()};
-    }
+    iterator begin() { return {this, 0}; }
+    iterator end()   { return {this, size()}; }
 
-    const_iterator cbegin() const
-    {
-        return const_cast<container&>(*this).begin();
-    }
-    const_iterator cend() const
-    {
-        return const_cast<container&>(*this).end();
-    }
+    const_iterator begin() const { return {this, 0}; }
+    const_iterator end()   const { return {this, size()}; }
+
+    const_iterator cbegin() const { return begin(); }
+    const_iterator cend()   const { return end(); }
 
     size_type size() const
     {
@@ -244,7 +238,7 @@ public:
 
     const_reference operator[](size_type i) const
     {
-        return operator[](i);
+        return const_cast<container&>(*this)[i];
     }
 
     reference at(size_type i)
