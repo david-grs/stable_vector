@@ -5,6 +5,7 @@
 #include <memory>
 #include <iterator>
 #include <algorithm>
+#include <numeric>
 
 #include <boost/operators.hpp>
 #include <boost/container/static_vector.hpp>
