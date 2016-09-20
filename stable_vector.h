@@ -40,9 +40,6 @@ private:
 
         reference operator*() { return (*m_container)[m_index]; }
 
-        iterator_base operator+(size_type i) { return {m_container, m_index + i}; }
-        iterator_base operator-(size_type i) { return {m_container, m_index - i}; }
-
         iterator_base& operator+=(size_type i) { m_index += i; return *this; }
         iterator_base& operator-=(size_type i) { return operator+=(-i); }
         iterator_base& operator++()            { return operator+=(1); }
@@ -89,8 +86,7 @@ public:
 
     explicit stable_vector(size_type count, const _T& value)
     {
-        for (size_type i = 0; i < count; ++i)
-            push_back(value);
+        std::fill_n(begin(), count, value);
     }
 
     explicit stable_vector(size_type count)
@@ -99,16 +95,19 @@ public:
             emplace_back();
     }
 
-    stable_vector(std::initializer_list<_T> init)
+    stable_vector(const std::initializer_list<_T>& init)
     {
         for (const auto& t : init)
             push_back(t);
     }
 
     template <typename _InputIt,
-              typename = typename std::enable_if<std::is_convertible<
-                  typename std::iterator_traits<_InputIt>::iterator_category, std::input_iterator_tag>::value>::type>
-    stable_vector(_InputIt first, _InputIt last)
+              typename =
+                  typename std::enable_if<
+                      std::is_convertible<
+                          typename std::iterator_traits<_InputIt>::iterator_category, std::input_iterator_tag
+              >::value>::type>
+    stable_vector(_InputIt first, const _InputIt& last)
     {
         for (; first != last; ++first)
             push_back(*first);
