@@ -53,7 +53,7 @@ private:
         bool operator< (iterator_base it) const { assert(m_container == it.m_container); return m_index < it.m_index; }
         bool operator==(iterator_base it) const { return m_container == it.m_container && m_index == it.m_index; }
 
-       protected:
+     protected:
         container* m_container;
         size_type m_index;
     };
