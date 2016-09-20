@@ -10,7 +10,7 @@
 #include <boost/operators.hpp>
 #include <boost/container/static_vector.hpp>
 
-template <typename _T, std::size_t _ElementsPerChunk = 512>
+template <typename _T, std::size_t _ChunkSize = 512>
 struct stable_vector
 {
     typedef _T value_type;
@@ -20,10 +20,10 @@ struct stable_vector
     typedef size_type difference_type;
 
 private:
-    typedef boost::container::static_vector<_T, _ElementsPerChunk> chunk_type;
-    typedef std::vector<std::unique_ptr<chunk_type>> storage_type;
+    using chunk_type = boost::container::static_vector<_T, _ChunkSize>;
+    using storage_type = std::vector<std::unique_ptr<chunk_type>>;
 
-    typedef stable_vector<_T, _ElementsPerChunk> container;
+    using container = stable_vector<_T, _ChunkSize>;
 
     template <typename _Iter>
     struct iterator_base
@@ -230,7 +230,7 @@ public:
 private:
     chunk_type& current_chunk()
     {
-        if (m_chunks.empty() || m_chunks.back()->size() == _ElementsPerChunk)
+        if (m_chunks.empty() || m_chunks.back()->size() == _ChunkSize)
             m_chunks.emplace_back(new chunk_type());
 
         return *m_chunks.back();
@@ -258,9 +258,9 @@ public:
 
     reference operator[](size_type i)
     {
-        size_type chunk_idx = i / _ElementsPerChunk;
+        size_type chunk_idx = i / _ChunkSize;
         chunk_type& chunk = *m_chunks[chunk_idx];
-        return chunk[i - chunk_idx * _ElementsPerChunk];
+        return chunk[i - chunk_idx * _ChunkSize];
     }
 
     const_reference operator[](size_type i) const
