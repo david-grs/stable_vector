@@ -10,6 +10,12 @@
 #include <boost/operators.hpp>
 #include <boost/container/static_vector.hpp>
 
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 template <typename _T, std::size_t _ChunkSize = 512>
 struct stable_vector
 {
@@ -116,7 +122,7 @@ public:
     stable_vector(const stable_vector& v)
     {
         for (const std::unique_ptr<chunk_type>& pchunk : v.m_chunks)
-            m_chunks.emplace_back(new chunk_type(*pchunk));
+            m_chunks.emplace_back(make_unique<chunk_type>(*pchunk));
     }
 
     stable_vector(stable_vector&& v) : m_chunks(std::move(v.m_chunks))
@@ -204,7 +210,7 @@ private:
     chunk_type& current_chunk()
     {
         if (m_chunks.empty() || m_chunks.back()->size() == _ChunkSize)
-            m_chunks.emplace_back(new chunk_type());
+            m_chunks.emplace_back(make_unique<chunk_type>());
 
         return *m_chunks.back();
     }
