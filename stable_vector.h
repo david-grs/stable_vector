@@ -178,10 +178,12 @@ public:
     const_reference back() const { return back(); }
 
 private:
+    void add_chunk() {  m_chunks.emplace_back(make_unique<chunk_type>()); }
+
     chunk_type& current_chunk()
     {
         if (m_chunks.empty() || m_chunks.back()->size() == _ChunkSize)
-            m_chunks.emplace_back(make_unique<chunk_type>());
+           add_chunk();
 
         return *m_chunks.back();
     }
