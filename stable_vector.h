@@ -10,6 +10,9 @@
 #include <boost/operators.hpp>
 #include <boost/container/static_vector.hpp>
 
+#define likely_false(x) __builtin_expect((x), 0)
+#define likely_true(x)  __builtin_expect((x), 1)
+
 template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args)
 {
@@ -183,7 +186,7 @@ private:
 
     chunk_type& current_chunk()
     {
-        if (m_chunks.empty() || m_chunks.back()->size() == _ChunkSize)
+        if (likely_false(m_chunks.empty() || m_chunks.back()->size() == _ChunkSize))
            add_chunk();
 
         return *m_chunks.back();
@@ -219,7 +222,7 @@ public:
 
     reference at(size_type i)
     {
-        if (i >= size())
+        if (likely_false(i >= size()))
             throw std::out_of_range("stable_vector::at");
 
         return operator[](i);
