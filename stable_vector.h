@@ -189,23 +189,20 @@ private:
     }
 
 public:
-    void push_back(const _T& t)
+    void reserve(size_type new_cap)
     {
-        chunk_type& chunk = current_chunk();
-        chunk.push_back(t);
+        const int new_chunks = new_cap - m_chunks * _ChunkSize;
+        for (int i = 0; i < new_chunks; ++i)
+            add_chunk();
     }
 
-    void push_back(_T&& t)
-    {
-        chunk_type& chunk = current_chunk();
-        chunk.push_back(std::move(t));
-    }
+    void push_back(const _T& t) { current_chunk().push_back(t); }
+    void push_back(_T&& t)      { current_chunk().push_back(std::move(t)); }
 
     template <typename... _Args>
     void emplace_back(_Args&&... args)
     {
-        chunk_type& chunk = current_chunk();
-        chunk.emplace_back(std::forward<_Args>(args)...);
+        current_chunk().emplace_back(std::forward<_Args>(args)...);
     }
 
     reference operator[](size_type i)
