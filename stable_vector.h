@@ -96,7 +96,8 @@ public:
 
     explicit stable_vector(size_type count, const _T& value)
     {
-        std::fill_n(begin(), count, value);
+        for (size_type i = 0; i < count; ++i)
+            push_back(value);
     }
 
     explicit stable_vector(size_type count)
