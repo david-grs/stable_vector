@@ -192,8 +192,7 @@ private:
 public:
     void reserve(size_type new_cap)
     {
-        const int new_chunks = new_cap - m_chunks * _ChunkSize;
-        for (int i = 0; i < new_chunks; ++i)
+        for (int i = new_cap - m_chunks.size() * _ChunkSize; i > 0; i -= _ChunkSize)
             add_chunk();
     }
 
