@@ -105,7 +105,7 @@ public:
             emplace_back();
     }
 
-    stable_vector(const std::initializer_list<_T>& init)
+    stable_vector(std::initializer_list<_T> init)
     {
         for (auto&& t : init)
             push_back(t);
