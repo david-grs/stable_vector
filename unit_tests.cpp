@@ -207,6 +207,18 @@ TEST(stable_vector, end)
     ASSERT_EQ(*(v.cend() - 1), 2);
 }
 
+TEST(stable_vector, capacity)
+{
+    stable_vector<int, 10> v;
+    ASSERT_EQ(0, v.capacity());
+
+    v.emplace_back(1);
+    ASSERT_EQ(v.chunk_size(), v.capacity());
+
+    stable_vector<int, 10> v2(55);
+    ASSERT_EQ(6 * v2.chunk_size(), v2.capacity());
+}
+
 TEST(stable_vector_multiple_chunks, init)
 {
     stable_vector<int, 3> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
