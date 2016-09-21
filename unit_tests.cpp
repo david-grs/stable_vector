@@ -213,10 +213,31 @@ TEST(stable_vector, capacity)
     ASSERT_EQ(0, v.capacity());
 
     v.emplace_back(1);
-    ASSERT_EQ(v.chunk_size(), v.capacity());
+    ASSERT_EQ(10, v.capacity());
 
     stable_vector<int, 10> v2(55);
-    ASSERT_EQ(6 * v2.chunk_size(), v2.capacity());
+    ASSERT_EQ(60, v2.capacity());
+}
+
+TEST(stable_vector, reserve)
+{
+    stable_vector<int, 10> v;
+
+    v.reserve(1);
+    ASSERT_EQ(10, v.capacity());
+
+    v.reserve(31);
+    ASSERT_EQ(40, v.capacity());
+
+    v.reserve(10);
+    ASSERT_EQ(40, v.capacity());
+
+    v.reserve(1);
+    ASSERT_EQ(40, v.capacity());
+
+    stable_vector<int, 7> v2;
+    v2.reserve(43);
+    ASSERT_EQ(49, v2.capacity());
 }
 
 TEST(stable_vector_multiple_chunks, init)
