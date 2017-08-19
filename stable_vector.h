@@ -14,7 +14,7 @@
 #define likely_false(x) __builtin_expect((x), 0)
 #define likely_true(x)  __builtin_expect((x), 1)
 
-template <typename T, std::size_t _ChunkSize = 512>
+template <typename T, std::size_t ChunkSize = 512>
 struct stable_vector
 {
 	using value_type = T;
@@ -25,14 +25,14 @@ struct stable_vector
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
 
-	constexpr size_type chunk_size() const noexcept { return _ChunkSize; }
+	constexpr size_type chunk_size() const noexcept { return ChunkSize; }
 	constexpr size_type max_size() const noexcept   { return std::numeric_limits<size_type>::max(); }
 
 private:
-	using chunk_type = boost::container::static_vector<T, _ChunkSize>;
+	using chunk_type = boost::container::static_vector<T, ChunkSize>;
 	using storage_type = std::vector<std::unique_ptr<chunk_type>>;
 
-	using container = stable_vector<T, _ChunkSize>;
+	using container = stable_vector<T, ChunkSize>;
 
 	template <typename _Iter, typename _ContainerT>
 	struct iterator_base
@@ -156,7 +156,7 @@ public:
 							   });
 	}
 
-	size_type capacity() const { return m_chunks.size() * _ChunkSize; }
+	size_type capacity() const { return m_chunks.size() * ChunkSize; }
 	bool empty() const { return m_chunks.empty(); }
 
 	bool operator==(const container& c) const
@@ -181,7 +181,7 @@ private:
 
 	chunk_type& current_chunk()
 	{
-		if (likely_false(m_chunks.empty() || m_chunks.back()->size() == _ChunkSize))
+		if (likely_false(m_chunks.empty() || m_chunks.back()->size() == ChunkSize))
 		   add_chunk();
 
 		return *m_chunks.back();
@@ -190,7 +190,7 @@ private:
 public:
 	void reserve(size_type sz)
 	{
-		for (std::size_t i = sz - capacity(); i > 0; i -= _ChunkSize)
+		for (std::size_t i = sz - capacity(); i > 0; i -= ChunkSize)
 			add_chunk();
 	}
 
@@ -205,9 +205,9 @@ public:
 
 	reference operator[](size_type i)
 	{
-		size_type chunk_idx = i / _ChunkSize;
+		size_type chunk_idx = i / ChunkSize;
 		chunk_type& chunk = *m_chunks[chunk_idx];
-		return chunk[i - chunk_idx * _ChunkSize];
+		return chunk[i - chunk_idx * ChunkSize];
 	}
 
 	const_reference operator[](size_type i) const
@@ -225,7 +225,7 @@ public:
 
 	const_reference at(size_type i) const
 	{
-		return at(i);
+		return const_cast<container&>(*this).at(i);
 	}
 
 private:
