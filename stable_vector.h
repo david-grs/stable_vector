@@ -188,9 +188,10 @@ private:
 	}
 
 public:
-	void reserve(size_type sz)
+	void reserve(size_type new_capacity)
 	{
-		for (std::size_t i = sz - capacity(); i > 0; i -= ChunkSize)
+		const std::size_t initial_capacity = capacity();
+		for (difference_type i = new_capacity - initial_capacity; i > 0; i -= ChunkSize)
 			add_chunk();
 	}
 
@@ -205,9 +206,7 @@ public:
 
 	reference operator[](size_type i)
 	{
-		size_type chunk_idx = i / ChunkSize;
-		chunk_type& chunk = *m_chunks[chunk_idx];
-		return chunk[i - chunk_idx * ChunkSize];
+		return (*m_chunks[i / ChunkSize])[i % ChunkSize];
 	}
 
 	const_reference operator[](size_type i) const
