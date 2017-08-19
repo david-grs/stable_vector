@@ -43,9 +43,9 @@ private:
 		virtual ~iterator_base() {}
 
 		iterator_base& operator+=(size_type i) { m_index += i; return *this; }
-		iterator_base& operator-=(size_type i) { return operator+=(-i); }
-		iterator_base& operator++()            { return operator+=(1); }
-		iterator_base& operator--()            { return operator+=(-1); }
+		iterator_base& operator-=(size_type i) { m_index -= i; return *this; }
+		iterator_base& operator++()            { ++m_index; return *this; }
+		iterator_base& operator--()            { --m_index; return *this; }
 
 		difference_type operator-(const iterator_base& it) { assert(m_container == it.m_container); return m_index - it.m_index; }
 
@@ -149,7 +149,7 @@ public:
 
 	size_type size() const
 	{
-		return std::accumulate(m_chunks.cbegin(), m_chunks.cend(), 0, [](size_type s, auto& chunk_ptr)
+		return std::accumulate(m_chunks.cbegin(), m_chunks.cend(), size_type{}, [](size_type s, auto& chunk_ptr)
 							   {
 								   return s + chunk_ptr->size();
 							   });
@@ -187,9 +187,9 @@ private:
 	}
 
 public:
-	void reserve(size_type new_cap)
+	void reserve(size_type sz)
 	{
-		for (int i = new_cap - m_chunks.size() * _ChunkSize; i > 0; i -= _ChunkSize)
+		for (std::size_t i = sz - capacity(); i > 0; i -= _ChunkSize)
 			add_chunk();
 	}
 
