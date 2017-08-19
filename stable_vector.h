@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include <vector>
 #include <initializer_list>
 #include <memory>
@@ -103,33 +104,33 @@ public:
 			emplace_back();
 	}
 
-	stable_vector(std::initializer_list<T> init)
-	{
-		for (auto&& t : init)
-			push_back(t);
-	}
-
-	template <typename _InputIt,
+	template <typename InputIt,
 			  typename =
 				  typename std::enable_if<
 					  std::is_convertible<
-						  typename std::iterator_traits<_InputIt>::iterator_category, std::input_iterator_tag
+						  typename std::iterator_traits<InputIt>::iterator_category, std::input_iterator_tag
 			  >::value>::type>
-	stable_vector(_InputIt first, const _InputIt& last)
+	stable_vector(InputIt first, InputIt last)
 	{
 		for (; first != last; ++first)
 			push_back(*first);
 	}
 
-	stable_vector(const stable_vector& v)
+	stable_vector(const stable_vector& other)
 	{
-		for (auto&& chunk : v.m_chunks)
+		for (const auto& chunk : other.m_chunks)
 			m_chunks.emplace_back(std::make_unique<chunk_type>(*chunk));
 	}
 
-	stable_vector(stable_vector&& v) :
-		m_chunks(std::move(v.m_chunks))
+	stable_vector(stable_vector&& other) :
+		m_chunks(std::move(other.m_chunks))
 	{
+	}
+
+	stable_vector(std::initializer_list<T> ilist)
+	{
+		for (const auto& t : ilist)
+			push_back(t);
 	}
 
 	stable_vector& operator=(stable_vector v)
