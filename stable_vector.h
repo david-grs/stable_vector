@@ -25,6 +25,8 @@ struct stable_vector
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
 
+	static_assert(ChunkSize % 2 == 0, "ChunkSize needs to be a multiplier of 2");
+
 	constexpr size_type chunk_size() const noexcept { return ChunkSize; }
 	constexpr size_type max_size() const noexcept   { return std::numeric_limits<size_type>::max(); }
 
