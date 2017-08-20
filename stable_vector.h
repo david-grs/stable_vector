@@ -32,16 +32,16 @@ private:
 	using chunk_type = boost::container::static_vector<T, ChunkSize>;
 	using storage_type = std::vector<std::unique_ptr<chunk_type>>;
 
-	using container = stable_vector<T, ChunkSize>;
+	using __self = stable_vector<T, ChunkSize>;
+	using __const_self = const stable_vector<T, ChunkSize>;
 
-	template <typename _Iter, typename _ContainerT>
+	template <typename Container>
 	struct iterator_base
 	{
-		iterator_base(_ContainerT* c = nullptr, size_type i = 0) :
+		iterator_base(Container* c = nullptr, size_type i = 0) :
 			m_container(c),
 			m_index(i)
 		{}
-		virtual ~iterator_base() {}
 
 		iterator_base& operator+=(size_type i) { m_index += i; return *this; }
 		iterator_base& operator-=(size_type i) { m_index -= i; return *this; }
@@ -54,7 +54,7 @@ private:
 		bool operator==(const iterator_base& it) const { return m_container == it.m_container && m_index == it.m_index; }
 
 	 protected:
-		_ContainerT* m_container;
+		Container* m_container;
 		size_type m_index;
 	};
 
@@ -62,30 +62,30 @@ public:
 	struct const_iterator;
 
 	struct iterator :
-		public iterator_base<iterator, container>,
+		public iterator_base<__self>,
 		public boost::random_access_iterator_helper<iterator, value_type>
 	{
-		using iterator_base<iterator, container>::iterator_base;
+		using iterator_base<__self>::iterator_base;
 		friend struct const_iterator;
 
 		reference operator*() { return (*this->m_container)[this->m_index]; }
 	};
 
 	struct const_iterator :
-		public iterator_base<const_iterator, const container>,
+		public iterator_base<__const_self>,
 		public boost::random_access_iterator_helper<const_iterator, const value_type>
 	{
-		using iterator_base<const_iterator, const container>::iterator_base;
+		using iterator_base<__const_self>::iterator_base;
 
 		const_iterator(const iterator& it) :
-			iterator_base<const_iterator, const container>(it.m_container, it.m_index)
+			iterator_base<__const_self>(it.m_container, it.m_index)
 		{
 		}
 
 		const_reference operator*() const { return (*this->m_container)[this->m_index]; }
 
 		bool operator==(const const_iterator& it) const
-		{ return iterator_base<const_iterator, const container>::operator==(it); }
+		{ return iterator_base<__const_self>::operator==(it); }
 
 		friend bool operator==(const iterator& l, const const_iterator& r) { return r == l; }
 	};
@@ -159,16 +159,16 @@ public:
 	size_type capacity() const { return m_chunks.size() * ChunkSize; }
 	bool empty() const { return m_chunks.empty(); }
 
-	bool operator==(const container& c) const
+	bool operator==(const __self& c) const
 	{
 		return size() == c.size() && std::equal(cbegin(), cend(), c.cbegin());
 	}
 
-	bool operator!=(const container& c) const { return !operator==(c); }
+	bool operator!=(const __self& c) const { return !operator==(c); }
 
-	void swap(container& v) { std::swap(m_chunks, v.m_chunks); }
+	void swap(__self& v) { std::swap(m_chunks, v.m_chunks); }
 
-	friend void swap(container& l, container& r) { l.swap(r); }
+	friend void swap(__self& l, __self& r) { l.swap(r); }
 
 	reference front()             { return m_chunks.front()->front(); }
 	const_reference front() const { return front(); }
@@ -198,10 +198,10 @@ public:
 	void push_back(const T& t) { current_chunk().push_back(t); }
 	void push_back(T&& t)      { current_chunk().push_back(std::move(t)); }
 
-	template <typename... _Args>
-	void emplace_back(_Args&&... args)
+	template <typename... Args>
+	void emplace_back(Args&&... args)
 	{
-		current_chunk().emplace_back(std::forward<_Args>(args)...);
+		current_chunk().emplace_back(std::forward<Args>(args)...);
 	}
 
 	reference operator[](size_type i)
@@ -211,7 +211,7 @@ public:
 
 	const_reference operator[](size_type i) const
 	{
-		return const_cast<container&>(*this)[i];
+		return const_cast<__self&>(*this)[i];
 	}
 
 	reference at(size_type i)
@@ -224,7 +224,7 @@ public:
 
 	const_reference at(size_type i) const
 	{
-		return const_cast<container&>(*this).at(i);
+		return const_cast<__self&>(*this).at(i);
 	}
 
 private:
