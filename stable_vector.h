@@ -87,7 +87,9 @@ public:
 		const_reference operator*() const { return (*this->m_container)[this->m_index]; }
 
 		bool operator==(const const_iterator& it) const
-		{ return iterator_base<__const_self>::operator==(it); }
+		{
+			return iterator_base<__const_self>::operator==(it);
+		}
 
 		friend bool operator==(const iterator& l, const const_iterator& r) { return r == l; }
 	};
@@ -97,13 +99,17 @@ public:
 	explicit stable_vector(size_type count, const T& value)
 	{
 		for (size_type i = 0; i < count; ++i)
+		{
 			push_back(value);
+		}
 	}
 
 	explicit stable_vector(size_type count)
 	{
 		for (size_type i = 0; i < count; ++i)
+		{
 			emplace_back();
+		}
 	}
 
 	template <typename InputIt,
@@ -115,13 +121,17 @@ public:
 	stable_vector(InputIt first, InputIt last)
 	{
 		for (; first != last; ++first)
+		{
 			push_back(*first);
+		}
 	}
 
 	stable_vector(const stable_vector& other)
 	{
 		for (const auto& chunk : other.m_chunks)
+		{
 			m_chunks.emplace_back(std::make_unique<chunk_type>(*chunk));
+		}
 	}
 
 	stable_vector(stable_vector&& other) :
@@ -132,7 +142,9 @@ public:
 	stable_vector(std::initializer_list<T> ilist)
 	{
 		for (const auto& t : ilist)
+		{
 			push_back(t);
+		}
 	}
 
 	stable_vector& operator=(stable_vector v)
@@ -184,7 +196,9 @@ private:
 	chunk_type& current_chunk()
 	{
 		if (likely_false(m_chunks.empty() || m_chunks.back()->size() == ChunkSize))
-		   add_chunk();
+		{
+			add_chunk();
+		}
 
 		return *m_chunks.back();
 	}
@@ -194,7 +208,9 @@ public:
 	{
 		const std::size_t initial_capacity = capacity();
 		for (difference_type i = new_capacity - initial_capacity; i > 0; i -= ChunkSize)
+		{
 			add_chunk();
+		}
 	}
 
 	void push_back(const T& t) { current_chunk().push_back(t); }
@@ -219,7 +235,9 @@ public:
 	reference at(size_type i)
 	{
 		if (likely_false(i >= size()))
+		{
 			throw std::out_of_range("stable_vector::at");
+		}
 
 		return operator[](i);
 	}
