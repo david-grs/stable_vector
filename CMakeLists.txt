@@ -13,8 +13,7 @@ endif()
 
 include(gtest.cmake)
 
-#find_package(Threads) # needed by gtest
+find_package(Threads) # needed by gtest
 add_executable(tests unit_tests.cc)
-#target_link_libraries(tests gtest ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(tests gtest )
+target_link_libraries(tests gtest ${CMAKE_THREAD_LIBS_INIT})
 
