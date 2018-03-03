@@ -235,23 +235,23 @@ TEST(stable_vector, reserve)
     v.reserve(1);
     ASSERT_EQ(40, v.capacity());
 
-    stable_vector<int, 7> v2;
-    v2.reserve(43);
-    ASSERT_EQ(49, v2.capacity());
+    stable_vector<int, 8> v2;
+    v2.reserve(41);
+    ASSERT_EQ(48, v2.capacity());
 }
 
 TEST(stable_vector_multiple_chunks, init)
 {
-    stable_vector<int, 3> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    stable_vector<int, 4> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     ASSERT_EQ(v.size(), 9);
 }
 
 TEST(stable_vector_multiple_chunks, copy)
 {
-    stable_vector<int, 3> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    stable_vector<int, 4> v = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     ASSERT_EQ(v.size(), 9);
 
-    stable_vector<int, 3> v2 = {1};
+    stable_vector<int, 4> v2 = {1};
     ASSERT_EQ(v2.size(), 1);
 
     v2 = v;
