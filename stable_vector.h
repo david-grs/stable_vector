@@ -34,9 +34,6 @@ private:
 
 	static_assert(is_pow2<ChunkSize>::value, "ChunkSize needs to be a power of 2");
 
-	using chunk_type = boost::container::static_vector<T, ChunkSize>;
-	using storage_type = std::vector<std::unique_ptr<chunk_type>>;
-
 	using __self = stable_vector<T, ChunkSize>;
 	using __const_self = const stable_vector<T, ChunkSize>;
 
@@ -120,17 +117,16 @@ public:
 	const_iterator end() const noexcept { return {this, size()}; }
 	const_iterator cend() const noexcept { return end(); }
 
-	size_type size() const noexcept;
+	size_type size() const noexcept { return empty() ? 0 : (m_chunks.size() - 1) * ChunkSize + m_chunks.back()->size(); }
 	size_type max_size() const noexcept { return std::numeric_limits<size_type>::max(); }
 	size_type capacity() const noexcept { return m_chunks.size() * ChunkSize; }
 
-	bool empty() const noexcept { return m_chunks.empty(); }
+	bool empty() const noexcept { return m_chunks.size(); }
 
 	void reserve(size_type new_capacity);
 	void shrink_to_fit() noexcept {}
 
 	bool operator==(const __self& c) const { return size() == c.size() && std::equal(cbegin(), cend(), c.cbegin()); }
-
 	bool operator!=(const __self& c) const { return !operator==(c); }
 
 	void swap(__self& v) { std::swap(m_chunks, v.m_chunks); }
@@ -143,11 +139,6 @@ public:
 	reference back()             { return m_chunks.back()->back(); }
 	const_reference back() const { return back(); }
 
-private:
-	void add_chunk();
-	chunk_type& current_chunk();
-
-public:
 	void push_back(const T& t);
 	void push_back(T&& t);
 
@@ -163,6 +154,12 @@ public:
 	const_reference at(size_type i) const;
 
 private:
+	using chunk_type = boost::container::static_vector<T, ChunkSize>;
+	using storage_type = std::vector<std::unique_ptr<chunk_type>>;
+
+	void add_chunk();
+	chunk_type& last_chunk();
+
 	storage_type m_chunks;
 };
 
@@ -232,22 +229,13 @@ stable_vector<T, ChunkSize>& stable_vector<T, ChunkSize>::operator=(stable_vecto
 }
 
 template <class T, std::size_t ChunkSize>
-typename stable_vector<T, ChunkSize>::size_type stable_vector<T, ChunkSize>::size() const noexcept
-{
-	return std::accumulate(m_chunks.cbegin(), m_chunks.cend(), size_type{}, [](size_type s, auto& chunk_ptr)
-						   {
-							   return s + chunk_ptr->size();
-						   });
-}
-
-template <class T, std::size_t ChunkSize>
 void stable_vector<T, ChunkSize>::add_chunk()
 {
 	m_chunks.emplace_back(std::make_unique<chunk_type>());
 }
 
 template <class T, std::size_t ChunkSize>
-typename stable_vector<T, ChunkSize>::chunk_type& stable_vector<T, ChunkSize>::current_chunk()
+typename stable_vector<T, ChunkSize>::chunk_type& stable_vector<T, ChunkSize>::last_chunk()
 {
 	if (likely_false(m_chunks.empty() || m_chunks.back()->size() == ChunkSize))
 	{
@@ -270,20 +258,20 @@ void stable_vector<T, ChunkSize>::reserve(size_type new_capacity)
 template <class T, std::size_t ChunkSize>
 void stable_vector<T, ChunkSize>::push_back(const T& t)
 {
-	current_chunk().push_back(t);
+	last_chunk().push_back(t);
 }
 
 template <class T, std::size_t ChunkSize>
 void stable_vector<T, ChunkSize>::push_back(T&& t)
 {
-	current_chunk().push_back(std::move(t));
+	last_chunk().push_back(std::move(t));
 }
 
 template <class T, std::size_t ChunkSize>
 template <class... Args>
 void stable_vector<T, ChunkSize>::emplace_back(Args&&... args)
 {
-	current_chunk().emplace_back(std::forward<Args>(args)...);
+	last_chunk().emplace_back(std::forward<Args>(args)...);
 }
 
 template <class T, std::size_t ChunkSize>
