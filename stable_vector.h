@@ -121,7 +121,7 @@ public:
 	size_type max_size() const noexcept { return std::numeric_limits<size_type>::max(); }
 	size_type capacity() const noexcept { return m_chunks.size() * ChunkSize; }
 
-	bool empty() const noexcept { return m_chunks.size(); }
+	bool empty() const noexcept { return m_chunks.size() == 0; }
 
 	void reserve(size_type new_capacity);
 	void shrink_to_fit() noexcept {}
