@@ -29,7 +29,7 @@ private:
 	template <std::size_t N>
 	struct is_pow2 { static constexpr bool value = (N & (N - 1)) == 0; };
 
-	static_assert(is_pow2<ChunkSize>::value, "ChunkSize needs to be a multiplier of 2");
+	static_assert(is_pow2<ChunkSize>::value, "ChunkSize needs to be a power of 2");
 
 private:
 	using chunk_type = boost::container::static_vector<T, ChunkSize>;
