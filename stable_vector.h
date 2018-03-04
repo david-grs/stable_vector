@@ -14,7 +14,7 @@
 #define likely_false(x) __builtin_expect((x), 0)
 #define likely_true(x)  __builtin_expect((x), 1)
 
-template <typename T, std::size_t ChunkSize = 512>
+template <class T, std::size_t ChunkSize = 512>
 struct stable_vector
 {
 	using value_type = T;
@@ -37,7 +37,7 @@ private:
 	using __self = stable_vector<T, ChunkSize>;
 	using __const_self = const stable_vector<T, ChunkSize>;
 
-	template <typename Container>
+	template <class Container>
 	struct iterator_base
 	{
 		iterator_base(Container* c = nullptr, size_type i = 0) :
@@ -98,8 +98,8 @@ public:
 	explicit stable_vector(size_type count, const T& value);
 	explicit stable_vector(size_type count);
 
-	template <typename InputIt,
-			  typename = std::enable_if_t<std::is_convertible<typename std::iterator_traits<InputIt>::iterator_category, std::input_iterator_tag>::value>>
+	template <class InputIt,
+			  class = std::enable_if_t<std::is_convertible<typename std::iterator_traits<InputIt>::iterator_category, std::input_iterator_tag>::value>>
 	stable_vector(InputIt first, InputIt last);
 
 	stable_vector(std::initializer_list<T>);
@@ -147,7 +147,7 @@ public:
 	void push_back(const T& t);
 	void push_back(T&& t);
 
-	template <typename... Args>
+	template <class... Args>
 	void emplace_back(Args&&... args);
 
 	reference operator[](size_type i);
@@ -168,7 +168,7 @@ private:
 
 
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 stable_vector<T, ChunkSize>::stable_vector(size_type count, const T& value)
 {
 	for (size_type i = 0; i < count; ++i)
@@ -177,7 +177,7 @@ stable_vector<T, ChunkSize>::stable_vector(size_type count, const T& value)
 	}
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 stable_vector<T, ChunkSize>::stable_vector(size_type count)
 {
 	for (size_type i = 0; i < count; ++i)
@@ -186,8 +186,8 @@ stable_vector<T, ChunkSize>::stable_vector(size_type count)
 	}
 }
 
-template <typename T, std::size_t ChunkSize>
-template <typename InputIt, typename>
+template <class T, std::size_t ChunkSize>
+template <class InputIt, class>
 stable_vector<T, ChunkSize>::stable_vector(InputIt first, InputIt last)
 {
 	for (; first != last; ++first)
@@ -196,7 +196,7 @@ stable_vector<T, ChunkSize>::stable_vector(InputIt first, InputIt last)
 	}
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 stable_vector<T, ChunkSize>::stable_vector(const stable_vector& other)
 {
 	for (const auto& chunk : other.m_chunks)
@@ -205,13 +205,13 @@ stable_vector<T, ChunkSize>::stable_vector(const stable_vector& other)
 	}
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 stable_vector<T, ChunkSize>::stable_vector(stable_vector&& other) :
 	m_chunks(std::move(other.m_chunks))
 {
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 stable_vector<T, ChunkSize>::stable_vector(std::initializer_list<T> ilist)
 {
 	for (const auto& t : ilist)
@@ -220,14 +220,14 @@ stable_vector<T, ChunkSize>::stable_vector(std::initializer_list<T> ilist)
 	}
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 stable_vector<T, ChunkSize>& stable_vector<T, ChunkSize>::operator=(stable_vector v)
 {
 	swap(v);
 	return *this;
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 typename stable_vector<T, ChunkSize>::size_type stable_vector<T, ChunkSize>::size() const
 {
 	return std::accumulate(m_chunks.cbegin(), m_chunks.cend(), size_type{}, [](size_type s, auto& chunk_ptr)
@@ -236,13 +236,13 @@ typename stable_vector<T, ChunkSize>::size_type stable_vector<T, ChunkSize>::siz
 						   });
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 void stable_vector<T, ChunkSize>::add_chunk()
 {
 	m_chunks.emplace_back(std::make_unique<chunk_type>());
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 typename stable_vector<T, ChunkSize>::chunk_type& stable_vector<T, ChunkSize>::current_chunk()
 {
 	if (likely_false(m_chunks.empty() || m_chunks.back()->size() == ChunkSize))
@@ -253,7 +253,7 @@ typename stable_vector<T, ChunkSize>::chunk_type& stable_vector<T, ChunkSize>::c
 	return *m_chunks.back();
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 void stable_vector<T, ChunkSize>::reserve(size_type new_capacity)
 {
 	const std::size_t initial_capacity = capacity();
@@ -263,40 +263,40 @@ void stable_vector<T, ChunkSize>::reserve(size_type new_capacity)
 	}
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 void stable_vector<T, ChunkSize>::push_back(const T& t)
 {
 	current_chunk().push_back(t);
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 void stable_vector<T, ChunkSize>::push_back(T&& t)
 {
 	current_chunk().push_back(std::move(t));
 }
 
-template <typename T, std::size_t ChunkSize>
-template <typename... Args>
+template <class T, std::size_t ChunkSize>
+template <class... Args>
 void stable_vector<T, ChunkSize>::emplace_back(Args&&... args)
 {
 	current_chunk().emplace_back(std::forward<Args>(args)...);
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 typename stable_vector<T, ChunkSize>::reference
 stable_vector<T, ChunkSize>::operator[](size_type i)
 {
 	return (*m_chunks[i / ChunkSize])[i % ChunkSize];
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 typename stable_vector<T, ChunkSize>::const_reference
 stable_vector<T, ChunkSize>::operator[](size_type i) const
 {
 	return const_cast<__self&>(*this)[i];
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 typename stable_vector<T, ChunkSize>::reference
 stable_vector<T, ChunkSize>::at(size_type i)
 {
@@ -308,7 +308,7 @@ stable_vector<T, ChunkSize>::at(size_type i)
 	return operator[](i);
 }
 
-template <typename T, std::size_t ChunkSize>
+template <class T, std::size_t ChunkSize>
 typename stable_vector<T, ChunkSize>::const_reference
 stable_vector<T, ChunkSize>::at(size_type i) const
 {
