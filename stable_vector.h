@@ -14,7 +14,7 @@
 #define likely_false(x) __builtin_expect((x), 0)
 #define likely_true(x)  __builtin_expect((x), 1)
 
-template <class T, std::size_t ChunkSize = 512>
+template <class T, std::size_t ChunkSize = 1024>
 struct stable_vector
 {
 	using value_type = T;
@@ -25,10 +25,11 @@ struct stable_vector
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
 
-	static_assert(ChunkSize % 2 == 0, "ChunkSize needs to be a multiplier of 2");
+private:
+	template <std::size_t N>
+	struct is_pow2 { static constexpr bool value = (N & (N - 1)) == 0; };
 
-	constexpr size_type chunk_size() const noexcept { return ChunkSize; }
-	constexpr size_type max_size() const noexcept   { return std::numeric_limits<size_type>::max(); }
+	static_assert(is_pow2<ChunkSize>::value, "ChunkSize needs to be a multiplier of 2");
 
 private:
 	using chunk_type = boost::container::static_vector<T, ChunkSize>;
@@ -122,6 +123,9 @@ public:
 
 	size_type capacity() const { return m_chunks.size() * ChunkSize; }
 	bool empty() const { return m_chunks.empty(); }
+
+	constexpr size_type chunk_size() const noexcept { return ChunkSize; }
+	constexpr size_type max_size() const noexcept   { return std::numeric_limits<size_type>::max(); }
 
 	bool operator==(const __self& c) const { return size() == c.size() && std::equal(cbegin(), cend(), c.cbegin()); }
 
