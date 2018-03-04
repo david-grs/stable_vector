@@ -332,8 +332,8 @@ TEST(stable_vector_iterator, arithmetic)
 	ASSERT_TRUE(it == v.begin());
 }
 
-template <class VectorT>
-int sum(const VectorT& v)
+template <class ContainerT>
+int sum(const ContainerT& v)
 {
 	int sum = 0;
 	auto start = std::chrono::high_resolution_clock::now();
@@ -347,18 +347,27 @@ int sum(const VectorT& v)
 	return sum;
 }
 
+static std::size_t ElementsCount = 10000000;
+
 TEST(stable_vector_iterator, performance)
 {
-	stable_vector<int, 4096> v(10000000, 1);
+	stable_vector<int, 4096> v(ElementsCount, 1);
 	int s = sum(v);
-	std::cout << s << std::endl;
+	EXPECT_EQ(ElementsCount, s);
 }
 
 TEST(boost_stable_vector_iterator, performance)
 {
-	boost::container::stable_vector<int> v(10000000, 1);
+	boost::container::stable_vector<int> v(ElementsCount, 1);
 	int s = sum(v);
-	std::cout << s << std::endl;
+	EXPECT_EQ(ElementsCount, s);
+}
+
+TEST(list_iterator, performance)
+{
+	std::list<int> v(ElementsCount, 1);
+	int s = sum(v);
+	EXPECT_EQ(ElementsCount, s);
 }
 
 TEST(std_vector_iterator, performance)
