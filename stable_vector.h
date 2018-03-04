@@ -15,8 +15,9 @@
 #define likely_true(x)  __builtin_expect((x), 1)
 
 template <class T, std::size_t ChunkSize = 1024>
-struct stable_vector
+class stable_vector
 {
+public:
 	using value_type = T;
 	using reference = value_type&;
 	using const_reference = const value_type&;
@@ -25,13 +26,14 @@ struct stable_vector
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
 
+	static constexpr const std::size_t chunk_size = ChunkSize;
+
 private:
 	template <std::size_t N>
 	struct is_pow2 { static constexpr bool value = (N & (N - 1)) == 0; };
 
 	static_assert(is_pow2<ChunkSize>::value, "ChunkSize needs to be a power of 2");
 
-private:
 	using chunk_type = boost::container::static_vector<T, ChunkSize>;
 	using storage_type = std::vector<std::unique_ptr<chunk_type>>;
 
@@ -106,26 +108,26 @@ public:
 	stable_vector(std::initializer_list<T>);
 
 	stable_vector(const stable_vector& other);
-	stable_vector(stable_vector&& other);
+	stable_vector(stable_vector&& other) noexcept;
 
 	stable_vector& operator=(stable_vector v);
 
-	iterator begin() { return {this, 0}; }
-	iterator end()   { return {this, size()}; }
+	iterator begin() noexcept { return {this, 0}; }
+	const_iterator begin() const noexcept { return {this, 0}; }
+	const_iterator cbegin() const noexcept { return begin(); }
 
-	const_iterator begin() const { return {this, 0}; }
-	const_iterator end()   const { return {this, size()}; }
+	iterator end() noexcept { return {this, size()}; }
+	const_iterator end() const noexcept { return {this, size()}; }
+	const_iterator cend() const noexcept { return end(); }
 
-	const_iterator cbegin() const { return begin(); }
-	const_iterator cend()   const { return end(); }
+	size_type size() const noexcept;
+	size_type max_size() const noexcept { return std::numeric_limits<size_type>::max(); }
+	size_type capacity() const noexcept { return m_chunks.size() * ChunkSize; }
 
-	size_type size() const;
+	bool empty() const noexcept { return m_chunks.empty(); }
 
-	size_type capacity() const { return m_chunks.size() * ChunkSize; }
-	bool empty() const { return m_chunks.empty(); }
-
-	constexpr size_type chunk_size() const noexcept { return ChunkSize; }
-	constexpr size_type max_size() const noexcept   { return std::numeric_limits<size_type>::max(); }
+	void reserve(size_type new_capacity);
+	void shrink_to_fit() noexcept {}
 
 	bool operator==(const __self& c) const { return size() == c.size() && std::equal(cbegin(), cend(), c.cbegin()); }
 
@@ -146,8 +148,6 @@ private:
 	chunk_type& current_chunk();
 
 public:
-	void reserve(size_type new_capacity);
-
 	void push_back(const T& t);
 	void push_back(T&& t);
 
@@ -210,7 +210,7 @@ stable_vector<T, ChunkSize>::stable_vector(const stable_vector& other)
 }
 
 template <class T, std::size_t ChunkSize>
-stable_vector<T, ChunkSize>::stable_vector(stable_vector&& other) :
+stable_vector<T, ChunkSize>::stable_vector(stable_vector&& other) noexcept :
 	m_chunks(std::move(other.m_chunks))
 {
 }
@@ -232,7 +232,7 @@ stable_vector<T, ChunkSize>& stable_vector<T, ChunkSize>::operator=(stable_vecto
 }
 
 template <class T, std::size_t ChunkSize>
-typename stable_vector<T, ChunkSize>::size_type stable_vector<T, ChunkSize>::size() const
+typename stable_vector<T, ChunkSize>::size_type stable_vector<T, ChunkSize>::size() const noexcept
 {
 	return std::accumulate(m_chunks.cbegin(), m_chunks.cend(), size_type{}, [](size_type s, auto& chunk_ptr)
 						   {
