@@ -21,6 +21,39 @@ struct B : A, boost::noncopyable
 	using A::A;
 };
 
+template <bool NoExcept = false>
+class CallCounter
+{
+public:
+	CallCounter() { ++constructions; }
+	~CallCounter() noexcept(true) { ++destructions; }
+
+	CallCounter(const CallCounter&) { ++copy_constructions; }
+	CallCounter& operator=(const CallCounter&) { ++copy_constructions; return *this; }
+
+	CallCounter(CallCounter&&) noexcept(NoExcept) { ++move_constructions; }
+	CallCounter& operator=(CallCounter&&) noexcept(NoExcept) { ++move_constructions; return *this;  }
+
+	static void reset_counters()
+	{
+		constructions = 0;
+		copy_constructions = 0;
+		move_constructions = 0;
+		destructions = 0;
+	}
+
+	static int constructions;
+	static int copy_constructions;
+	static int move_constructions;
+	static int destructions;
+};
+
+template <bool NoExcept> int CallCounter<NoExcept>::constructions = 0;
+template <bool NoExcept> int CallCounter<NoExcept>::copy_constructions = 0;
+template <bool NoExcept> int CallCounter<NoExcept>::move_constructions = 0;
+template <bool NoExcept> int CallCounter<NoExcept>::destructions = 0;
+
+
 TEST(stable_vector, init)
 {
 	stable_vector<int> v;
@@ -99,11 +132,19 @@ TEST(stable_vector, move_ctor)
 
 TEST(stable_vector, move_assignment)
 {
-	stable_vector<int> v2 = {10, 11};
+	stable_vector<CallCounter<>, 16> v(10);
+	ASSERT_EQ(v.size(), 10);
 
-	v2 = stable_vector<int>({1, 2, 3, 4, 5});
+	stable_vector<CallCounter<>, 16> v2(3);
+	CallCounter<>::reset_counters();
 
-	ASSERT_EQ(v2.size(), 5);
+	v = std::move(v2);
+	ASSERT_EQ(v.size(), 3);
+
+	EXPECT_EQ(0, CallCounter<>::constructions);
+	EXPECT_EQ(10, CallCounter<>::destructions);
+	EXPECT_EQ(0, CallCounter<>::copy_constructions);
+	EXPECT_EQ(0, CallCounter<>::move_constructions);
 }
 
 TEST(stable_vector, push_back)
