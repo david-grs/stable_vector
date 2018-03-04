@@ -1,6 +1,7 @@
 #include "stable_vector.h"
 
 #include <boost/noncopyable.hpp>
+#include <boost/container/stable_vector.hpp>
 #include <gtest/gtest.h>
 
 #include <list>
@@ -331,8 +332,6 @@ TEST(stable_vector_iterator, arithmetic)
 	ASSERT_TRUE(it == v.begin());
 }
 
-// TODO stable vector<it, 10> should not build......
-
 template <class VectorT>
 int sum(const VectorT& v)
 {
@@ -344,20 +343,27 @@ int sum(const VectorT& v)
 	}
 	auto end = std::chrono::high_resolution_clock::now();
 
-	std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << std::endl;
+	std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "ms elapsed" << std::endl;
 	return sum;
 }
 
 TEST(stable_vector_iterator, performance)
 {
-	stable_vector<int> v(1000000, 1);
+	stable_vector<int, 4096> v(10000000, 1);
+	int s = sum(v);
+	std::cout << s << std::endl;
+}
+
+TEST(boost_stable_vector_iterator, performance)
+{
+	boost::container::stable_vector<int> v(10000000, 1);
 	int s = sum(v);
 	std::cout << s << std::endl;
 }
 
 TEST(std_vector_iterator, performance)
 {
-	std::vector<int> v(1000000, 1);
+	std::vector<int> v(10000000, 1);
 	int s = sum(v);
 	std::cout << s << std::endl;
 }
