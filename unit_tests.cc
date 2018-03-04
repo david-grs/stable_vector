@@ -1,9 +1,11 @@
 #include "stable_vector.h"
 
-#include <list>
-
 #include <boost/noncopyable.hpp>
 #include <gtest/gtest.h>
+
+#include <list>
+#include <vector>
+#include <chrono>
 
 struct A
 {
@@ -327,4 +329,35 @@ TEST(stable_vector_iterator, arithmetic)
 	it -= 5;
 	ASSERT_TRUE(it == v.cbegin());
 	ASSERT_TRUE(it == v.begin());
+}
+
+// TODO stable vector<it, 10> should not build......
+
+template <class VectorT>
+int sum(const VectorT& v)
+{
+	int sum = 0;
+	auto start = std::chrono::high_resolution_clock::now();
+	for (const auto& i : v)
+	{
+		sum += i;
+	}
+	auto end = std::chrono::high_resolution_clock::now();
+
+	std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << std::endl;
+	return sum;
+}
+
+TEST(stable_vector_iterator, performance)
+{
+	stable_vector<int> v(1000000, 1);
+	int s = sum(v);
+	std::cout << s << std::endl;
+}
+
+TEST(std_vector_iterator, performance)
+{
+	std::vector<int> v(1000000, 1);
+	int s = sum(v);
+	std::cout << s << std::endl;
 }
