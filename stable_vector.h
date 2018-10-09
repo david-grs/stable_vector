@@ -14,9 +14,89 @@
 #define likely_false(x) __builtin_expect((x), 0)
 #define likely_true(x)  __builtin_expect((x), 1)
 
+namespace internal { namespace stable_vector {
+
+template <class StableVectorT>
+class iterator_base
+{
+public:
+	using iterator_category = std::random_access_iterator_tag;
+
+	using size_type = typename StableVectorT::size_type;
+	using difference_type = typename StableVectorT::difference_type;
+
+	explicit iterator_base(StableVectorT* container = nullptr, size_type index = 0) :
+		m_container(container),
+		m_index(index)
+	{}
+
+	iterator_base& operator+=(size_type i) { m_index += i; return *this; }
+	iterator_base& operator-=(size_type i) { m_index -= i; return *this; }
+	iterator_base& operator++()            { ++m_index; return *this; }
+	iterator_base& operator--()            { --m_index; return *this; }
+
+	difference_type operator-(const iterator_base& it) { assert(m_container == it.m_container); return m_index - it.m_index; }
+
+	bool operator< (const iterator_base& it) const { assert(m_container == it.m_container); return m_index < it.m_index; }
+	bool operator==(const iterator_base& it) const { return m_container == it.m_container && m_index == it.m_index; }
+
+ protected:
+	StableVectorT* m_container;
+	size_type m_index;
+};
+
+template <class StableVectorT>
+class const_iterator;
+
+template <class StableVectorT>
+class iterator :
+	public iterator_base<StableVectorT>,
+	public boost::random_access_iterator_helper<iterator<StableVectorT>, typename StableVectorT::value_type>
+{
+public:
+	using value_type = typename StableVectorT::value_type;
+	using reference = typename StableVectorT::reference;
+	using const_reference = typename StableVectorT::const_reference;
+
+	using iterator_base<StableVectorT>::iterator_base;
+	friend class const_iterator<const StableVectorT>;
+
+	reference operator*() { return (*this->m_container)[this->m_index]; }
+};
+
+template <class StableVectorT>
+class const_iterator :
+	public iterator_base<const StableVectorT>,
+	public boost::random_access_iterator_helper<const_iterator<const StableVectorT>, const typename StableVectorT::value_type>
+{
+public:
+	using value_type = const typename StableVectorT::value_type;
+	using const_reference = typename StableVectorT::const_reference;
+
+	using iterator_base<const StableVectorT>::iterator_base;
+
+	const_iterator(const iterator<StableVectorT>& it) :
+		iterator_base<const StableVectorT>(it.m_container, it.m_index)
+	{
+	}
+
+	const_reference operator*() const { return (*this->m_container)[this->m_index]; }
+
+	bool operator==(const const_iterator& it) const
+	{
+		return iterator_base<const StableVectorT>::operator==(it);
+	}
+
+	friend bool operator==(const iterator<StableVectorT>& l, const const_iterator& r) { return r == l; }
+};
+
+}}
+
 template <class T, std::size_t ChunkSize = 1024>
 class stable_vector
 {
+	using __self = stable_vector<T, ChunkSize>;
+
 public:
 	using value_type = T;
 	using reference = value_type&;
@@ -26,6 +106,9 @@ public:
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
 
+	using iterator = internal::stable_vector::iterator<__self>;
+	using const_iterator = internal::stable_vector::const_iterator<__self>;
+
 	static constexpr const std::size_t chunk_size = ChunkSize;
 
 private:
@@ -34,66 +117,7 @@ private:
 
 	static_assert(is_pow2<ChunkSize>::value, "ChunkSize needs to be a power of 2");
 
-	using __self = stable_vector<T, ChunkSize>;
-	using __const_self = const stable_vector<T, ChunkSize>;
-
-	template <class Container>
-	struct iterator_base
-	{
-		iterator_base(Container* c = nullptr, size_type i = 0) :
-			m_container(c),
-			m_index(i)
-		{}
-
-		iterator_base& operator+=(size_type i) { m_index += i; return *this; }
-		iterator_base& operator-=(size_type i) { m_index -= i; return *this; }
-		iterator_base& operator++()            { ++m_index; return *this; }
-		iterator_base& operator--()            { --m_index; return *this; }
-
-		difference_type operator-(const iterator_base& it) { assert(m_container == it.m_container); return m_index - it.m_index; }
-
-		bool operator< (const iterator_base& it) const { assert(m_container == it.m_container); return m_index < it.m_index; }
-		bool operator==(const iterator_base& it) const { return m_container == it.m_container && m_index == it.m_index; }
-
-	 protected:
-		Container* m_container;
-		size_type m_index;
-	};
-
 public:
-	struct const_iterator;
-
-	struct iterator :
-		public iterator_base<__self>,
-		public boost::random_access_iterator_helper<iterator, value_type>
-	{
-		using iterator_base<__self>::iterator_base;
-		friend struct const_iterator;
-
-		reference operator*() { return (*this->m_container)[this->m_index]; }
-	};
-
-	struct const_iterator :
-		public iterator_base<__const_self>,
-		public boost::random_access_iterator_helper<const_iterator, const value_type>
-	{
-		using iterator_base<__const_self>::iterator_base;
-
-		const_iterator(const iterator& it) :
-			iterator_base<__const_self>(it.m_container, it.m_index)
-		{
-		}
-
-		const_reference operator*() const { return (*this->m_container)[this->m_index]; }
-
-		bool operator==(const const_iterator& it) const
-		{
-			return iterator_base<__const_self>::operator==(it);
-		}
-
-		friend bool operator==(const iterator& l, const const_iterator& r) { return r == l; }
-	};
-
 	stable_vector() = default;
 	explicit stable_vector(size_type count, const T& value);
 	explicit stable_vector(size_type count);
